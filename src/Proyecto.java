@@ -8,7 +8,7 @@ public class Proyecto {
 	private static double[] precios = new double[16];
 	private static int[][][] tienda = new int[4][4][2];
 	private static int[] ventas = new int[16];
-	private static int cajaTotal = 0;
+	private static double cajaTotal = 0;
 	private static String password = "DAM";
 	private static boolean apagar = false;
 
@@ -162,6 +162,9 @@ public class Proyecto {
 				break;
 			case 7:
 				infoProductos();
+				break;
+			case 8:
+				System.out.printf("\nVentas totales hasta este momento: %2.2f€\n\n",cajaTotal);
 				break;
 			case 9:
 				salir = true;
