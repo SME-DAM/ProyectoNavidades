@@ -154,9 +154,10 @@ public class Proyecto {
 		System.out.println("\nHa indicado una posicion incorrecta");
 		return out;
 	}
+	//recibe la posicion a rellenar y pide la cantidad a reponer,
+	//si es posible añadirlo devuelve true, en caso contrario false.
 	private static boolean reponerProductos(int[] posicion) {
 		boolean actualizado = false;
-		if (posicion[0]<0) return actualizado;
 		System.out.println("Introduce la cantidad a reponer:");
 		int cantidad = 0;
 		try {
@@ -172,6 +173,20 @@ public class Proyecto {
 		}	
 		return actualizado;
 	}
+	
+private static boolean actualizarPrecio(int[] posicion) {
+	System.out.println("Introduce el nuevo precio de venta:");
+	double precio = 0;
+	try {
+		precio = sc.nextDouble();
+	} catch (InputMismatchException e) {
+		sc.nextLine();
+	}
+	if (precio <= 0) return false;
+	precios[tienda[posicion[0]][posicion[1]][0]]=precio;
+	return true;
+}
+	
 	//gestiona el menu de administracion
 	static void menuAdministrador() {
 		System.out.println("\nIntroduzca la contraseña de administración");
@@ -188,6 +203,7 @@ public class Proyecto {
 			System.out.println("5. Más vendidos\n6. Menos vendidos\n7. Informacion productos");
 			System.out.println("8. Ventas totales\n9. Cerrar sesion\n10. Apagar la máquina\n");
 			int opcion = 0;
+			int[] posicion;
 			try {
 				opcion = sc.nextInt();
 			} catch (InputMismatchException e) {
@@ -198,10 +214,20 @@ public class Proyecto {
 				actualizarPassword();
 				break;
 			case 2:
-				int[] posicion = recogePosicion();
+				posicion = recogePosicion();
 				if(posicion[0]>=0) {
 					if(reponerProductos(posicion)) {
 						System.out.println("\nEl producto se ha repuesto correctamente");
+					} else {
+						System.out.println("\nError, revise los datos");
+					}
+				}
+				break;
+			case 3:
+				posicion = recogePosicion();
+				if(posicion[0]>=0) {
+					if(actualizarPrecio(posicion)) {
+						System.out.println("\nEl precio se a actualizado correctamente");
 					} else {
 						System.out.println("\nError, revise los datos");
 					}
