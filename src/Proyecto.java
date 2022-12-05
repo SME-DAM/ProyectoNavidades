@@ -88,6 +88,7 @@ public class Proyecto {
 			celda[1]--;
 			int prod = celda[0];
 			ventas[prod]++;
+			System.out.println(productos[prod]);
 			return precios[prod];
 		}
 		return 0;
@@ -100,8 +101,8 @@ public class Proyecto {
 		for (int fila = 0; fila < filas; fila++) {
 			for (int columna = 0; columna < columnas; columna++) {
 				int[] celda = tienda[fila][columna];
-				System.out.printf("| %-20s | Posicion: %c%c | Precio: %2.2f |\n", productos[celda[0]], 'A' + fila,
-						'A' + columna, precios[celda[0]]);
+				System.out.printf("| %-20s | Posicion: %c%c | Precio: %2.2f |\n", productos[celda[0]],
+						'A' + fila, 'A' + columna, precios[celda[0]]);
 			}
 		}
 	}
@@ -119,7 +120,8 @@ public class Proyecto {
 					unidades += tienda[fila][columna][0]==prod?tienda[fila][columna][1]:0;
 				}
 			}		
-			System.out.printf("| %-20s | Precio: %2.2f | U. disponibles: %3d | Ventas: %3d |\n", productos[prod], precios[prod], unidades,ventas[prod]);
+			System.out.printf("| %-20s | Precio: %2.2f | U. disponibles: %3d | Ventas: %3d |\n",
+					productos[prod], precios[prod], unidades,ventas[prod]);
 		}
 	}
 	private static void actualizarPassword() {
@@ -134,6 +136,41 @@ public class Proyecto {
 		}
 		System.out.println("\nLas contraseñas no coinciden");
 		
+	}
+	//comprueba que haya sitio y repone los productos especificados
+	private static int[] recogePosicion() {
+		System.out.println("Introduce la posicion del producto:");
+		int[] out= {-1,-1};
+		String entrada = sc.next();
+		if (entrada.length() >= 2) {
+			int fila = entrada.charAt(0) - 'A';
+			int columna = entrada.charAt(1) - 'A';
+			if (!(fila < 0 || fila > 3 || columna < 0 || columna > 3)) {
+				out[0]=fila;
+				out[1]=columna;
+				return out;
+			}
+		}
+		System.out.println("\nHa indicado una posicion incorrecta");
+		return out;
+	}
+	private static boolean reponerProductos(int[] posicion) {
+		boolean actualizado = false;
+		if (posicion[0]<0) return actualizado;
+		System.out.println("Introduce la cantidad a reponer:");
+		int cantidad = 0;
+		try {
+			cantidad = sc.nextInt();
+		} catch (InputMismatchException e) {
+			
+		}
+		if (cantidad <= 0) return actualizado;
+		int existencias = tienda[posicion[0]][posicion[1]][1];
+		if ((5 - existencias) >= cantidad) {
+			tienda[posicion[0]][posicion[1]][1]+=cantidad;
+			actualizado = true;
+		}	
+		return actualizado;
 	}
 	//gestiona el menu de administracion
 	static void menuAdministrador() {
@@ -160,6 +197,16 @@ public class Proyecto {
 			case 1:
 				actualizarPassword();
 				break;
+			case 2:
+				int[] posicion = recogePosicion();
+				if(posicion[0]>=0) {
+					if(reponerProductos(posicion)) {
+						System.out.println("\nEl producto se ha repuesto correctamente");
+					} else {
+						System.out.println("\nError, revise los datos");
+					}
+				}
+				break;
 			case 7:
 				infoProductos();
 				break;
@@ -179,7 +226,7 @@ public class Proyecto {
 			}
 		}
 	}
-
+	
 	public static void main(String[] args) {
 
 		inicializarProductos();
@@ -192,23 +239,16 @@ public class Proyecto {
 			char opcion = input.length()==1?input.charAt(0):'E';
 			switch (opcion) {
 			case '1':
-				System.out.println("Introduce la posicion de la golosina:");
-				String entrada = sc.next();
-				if (entrada.length() == 2) {
-					int fila = 'D' - entrada.charAt(0);
-					int columna = 'D' - entrada.charAt(1);
-					if (!(fila < 0 || fila > 3 || columna < 0 || columna > 3)) {
-						double venta = venderProducto(fila, columna);
-						cajaTotal += venta;
-						if (venta > 0) {
-							System.out.println("\nPuede retirar su producto");
-						} else {
-							System.out.println("\nNo hay existencias de ese producto");
-						}
-						break;
+				int[] posicion = recogePosicion();
+				if (posicion[0]>=0) {
+					double venta = venderProducto(posicion[0], posicion[1]);
+					cajaTotal += venta;
+					if (venta > 0) {
+						System.out.println("\nPuede retirar su producto");
+					} else {
+						System.out.println("\nNo hay existencias de ese producto");
 					}
 				}
-				System.out.println("\nHa indicado una posicion incorrecta");
 				break;
 			case '2':
 				mostarProductos();
@@ -216,6 +256,12 @@ public class Proyecto {
 			case '3':
 				menuAdministrador();
 				break;
+			case '4':
+				infoProductos();
+				for (int index = 0; index < productos.length; index++) {
+					System.out.printf("| Index: %2d | %-20s | Precio: %2.2f | Ventas: %3d |\n",
+							index, productos[index], precios[index],ventas[index]);
+				}
 			default:
 				System.out.println("\nHa indicado una opcion incorrecta");
 				break;
