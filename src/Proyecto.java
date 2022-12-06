@@ -7,7 +7,7 @@ public class Proyecto {
 	private static String[] productos = new String[16];
 	private static double[] precios = new double[16];
 	private static int[][][] tienda = new int[4][4][2];
-	private static int[] ventas = new int[16];
+	private static int[][] ventas = new int[16][2];
 	private static double cajaTotal = 0;
 	private static String password = "DAM";
 	private static boolean apagar = false;
@@ -24,7 +24,8 @@ public class Proyecto {
 		//reseteo las variables
 		for (int i = 0; i < 16; i++) {
 			productos[i] = "";
-			ventas[i] = 0;
+			ventas[i][0] = i;
+			ventas[i][1] = 0;
 			precios[i] = 0;
 		}
 		//copio los datos del enunciado en las estructuras de control
@@ -62,9 +63,6 @@ public class Proyecto {
 					double prec = precios[index];
 					precios[index] = precios[index + 1];
 					precios[index + 1] = prec;
-					int vent = ventas[index];
-					ventas[index] = ventas[index + 1];
-					ventas[index + 1] = vent;
 					for (int fila = 0; fila < 4; fila++) {
 						for (int columna = 0; columna < 4; columna++) {
 							if (tienda[fila][columna][0] == index) {
@@ -86,10 +84,9 @@ public class Proyecto {
 		int[] celda = tienda[fila][columna];
 		if (celda[1] > 0) {
 			celda[1]--;
-			int prod = celda[0];
-			ventas[prod]++;
-			System.out.println(productos[prod]);
-			return precios[prod];
+			for (int index = 0; index < ventas.length;index++)
+				if (ventas[index][0]==celda[0]) ventas[index][1]++;
+			return precios[celda[0]];
 		}
 		return 0;
 	}
@@ -110,18 +107,19 @@ public class Proyecto {
 	//muestra los precios de los productos registrados,
 	//sus existencias y sus ventas
 	private static void infoProductos() {
-		int filas = tienda[0].length;
-		int columnas = tienda.length;
 		for (int prod =0;prod<16;prod++) {
 			if(productos[prod].isEmpty()) return;
 			int unidades = 0;
-			for (int fila = 0; fila < filas; fila++) {
-				for (int columna = 0; columna < columnas; columna++) {
+			for (int fila = 0; fila < tienda[0].length; fila++) {
+				for (int columna = 0; columna < tienda.length; columna++) {
 					unidades += tienda[fila][columna][0]==prod?tienda[fila][columna][1]:0;
 				}
-			}		
+			}
+			int vendido = 0;
+			for (int index = 0; index < ventas.length;index++)
+				if (ventas[index][0]==prod) vendido = ventas[index][1];
 			System.out.printf("| %-20s | Precio: %2.2f | U. disponibles: %3d | Ventas: %3d |\n",
-					productos[prod], precios[prod], unidades,ventas[prod]);
+					productos[prod], precios[prod], unidades,vendido);
 		}
 	}
 	private static void actualizarPassword() {
@@ -186,7 +184,40 @@ private static boolean actualizarPrecio(int[] posicion) {
 	precios[tienda[posicion[0]][posicion[1]][0]]=precio;
 	return true;
 }
+
+private static void muestraTopVentas() {
+	int index = ventas.length;
+	int cuenta = 0;
+	while(index > 0) {
+		index --;
+		int prod = ventas[index][0];
+		if (cuenta < 3 || ventas[index+1][1] == ventas[index][1]) {
+			if (!productos[prod].isEmpty() && ventas[index][1] > 0) {
+				cuenta++;
+				System.out.printf("| %-20s | Precio: %2.2f |  Ventas: %3d |\n",
+						productos[prod], precios[prod], ventas[index][1]);
+			}
+		} else {
+			return;
+		}
+	}
+	if (cuenta == 0) System.out.println("\nNo se ha vendido nada aún!\n");
+}
+private static void ordenaVentas() {
+	boolean working = true;
+	while (working) {
+		working=false;
+		for (int index = 0; index < productos.length - 1; index++) {
+			if (ventas[index][1] > ventas[index+1][1] && !productos[ventas[index+1][0]].isEmpty()) {
+				int[] temp = ventas[index];
+				ventas[index] = ventas[index + 1];
+				ventas[index + 1] = temp;
+				working=true;
+			}
+		}
+	}
 	
+}
 	//gestiona el menu de administracion
 	static void menuAdministrador() {
 		System.out.println("\nIntroduzca la contraseña de administración");
@@ -232,6 +263,10 @@ private static boolean actualizarPrecio(int[] posicion) {
 						System.out.println("\nError, revise los datos");
 					}
 				}
+				break;
+			case 5:
+				ordenaVentas();
+				muestraTopVentas();
 				break;
 			case 7:
 				infoProductos();
