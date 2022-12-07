@@ -48,13 +48,14 @@ public class Proyecto {
 				}
 			}
 		}
+		ordenaAlfabetico();
 	}
-	//ordena alfabeticamente los productos por nombre
+	//ordena alfabeticamente los productos segun el nombre
 	//usa el algoritmo de la burbuja, dejando los vacios al final
 	static public void ordenaAlfabetico() {
-		boolean working = true;
-		while (working) {
-			working = false;
+		boolean desordenado = true;
+		while (desordenado) {
+			desordenado = false;
 			for (int index = 0; index < productos.length - 1; index++) {
 				if (productos[index].compareToIgnoreCase(productos[index + 1]) > 0 && !productos[index + 1].isEmpty()) {
 					String proc = productos[index];
@@ -72,7 +73,7 @@ public class Proyecto {
 							}
 						}
 					}
-					working = true;
+					desordenado = true;
 				}
 
 			}
@@ -137,7 +138,7 @@ public class Proyecto {
 	}
 	//comprueba que haya sitio y repone los productos especificados
 	private static int[] recogePosicion() {
-		System.out.println("Introduce la posicion del producto:");
+		System.out.println("Introduce la posicion:");
 		int[] out= {-1,-1};
 		String entrada = sc.next();
 		if (entrada.length() >= 2) {
@@ -173,7 +174,7 @@ public class Proyecto {
 	}
 	
 private static boolean actualizarPrecio(int[] posicion) {
-	System.out.println("Introduce el nuevo precio de venta:");
+	System.out.println("Introduce el precio de venta:");
 	double precio = 0;
 	try {
 		precio = sc.nextDouble();
@@ -182,6 +183,52 @@ private static boolean actualizarPrecio(int[] posicion) {
 	}
 	if (precio <= 0) return false;
 	precios[tienda[posicion[0]][posicion[1]][0]]=precio;
+	return true;
+}
+
+private static boolean actualizarProducto(int[] posicion) {
+	System.out.println("Introduce el nombre del producto:");
+	String producto = sc.next().strip();
+	if (producto.isEmpty()) return false;
+	int index=0;
+	boolean existe = false;
+	
+	while (!existe && index < productos.length) {
+		if (productos[index].equals(producto)) {
+			existe = true;
+		} else {
+			index++;
+		}
+	}
+	if (existe) {
+		tienda[posicion[0]][posicion[1]][0]=index;
+	} else {
+		index = tienda[posicion[0]][posicion[1]][0];
+		int ocurrencias=0;
+		for (int fila = 0; fila < 4; fila++) {
+			for (int columna = 0; columna < 4; columna++) {
+				ocurrencias += tienda[fila][columna][0] == index ? 1 : 0;
+			}
+		}
+		if(ocurrencias <= 1) {
+			productos[index]=producto;
+			for (int ind = 0; ind < ventas.length;ind++)
+				if (ventas[ind][0]==index) ventas[ind][1] = 0;
+		} else {
+			for (int ind = 0; ind < productos.length;ind++)
+				if(productos[ind].isEmpty()) {
+					productos[ind]=producto;
+					for (int venta = 0; venta < ventas.length;venta++)
+						if (ventas[venta][0]==index) ventas[venta][1] = 0;
+					tienda[posicion[0]][posicion[1]][0]=ind;
+					tienda[posicion[0]][posicion[1]][1]=0;
+					ind = productos.length;
+				}
+		}
+	}
+	while(!reponerProductos(posicion));
+	while(!actualizarPrecio(posicion))
+		System.out.println("Introduce un valor positivo!");
 	return true;
 }
 
@@ -203,6 +250,24 @@ private static void muestraTopVentas() {
 	}
 	if (cuenta == 0) System.out.println("\nNo se ha vendido nada aún!\n");
 }
+
+
+private static void muestraMenosVentas() {
+	int index = 0;
+	while(index < ventas.length) {
+		int prod = ventas[index][0];
+		if (ventas[index][1] == ventas[0][1]) {
+			if (!productos[prod].isEmpty()) {
+				System.out.printf("| %-20s | Precio: %2.2f |  Ventas: %3d |\n",
+						productos[prod], precios[prod], ventas[index][1]);
+			}
+		} else {
+			return;
+		}
+		index ++;
+	}
+}
+
 private static void ordenaVentas() {
 	boolean working = true;
 	while (working) {
@@ -229,7 +294,7 @@ private static void ordenaVentas() {
 		System.out.println("\nBienvenid@ al panel de administración:\n");
 		boolean salir = false;
 		while (!salir) {
-			System.out.println("\n*** Opciones administracion***\n\n1. Cambiar contraseña");
+			System.out.println("\n*** Opciones administrativas***\n\n1. Cambiar contraseña");
 			System.out.println("2. Reponer productos\n3. Cambiar precio\n4. Cambiar producto");
 			System.out.println("5. Más vendidos\n6. Menos vendidos\n7. Informacion productos");
 			System.out.println("8. Ventas totales\n9. Cerrar sesion\n10. Apagar la máquina\n");
@@ -264,9 +329,22 @@ private static void ordenaVentas() {
 					}
 				}
 				break;
+			case 4:
+				posicion = recogePosicion();
+				if(posicion[0]>=0)
+					if(actualizarProducto(posicion)) {
+						System.out.println("\nEl producto se a actualizado correctamente");
+					} else { 
+						System.out.println("\nError, revise los datos");
+					}
+				break;
 			case 5:
 				ordenaVentas();
 				muestraTopVentas();
+				break;
+			case 6:
+				ordenaVentas();
+				muestraMenosVentas();
 				break;
 			case 7:
 				infoProductos();
@@ -291,7 +369,6 @@ private static void ordenaVentas() {
 	public static void main(String[] args) {
 
 		inicializarProductos();
-		ordenaAlfabetico();
 		sc = new Scanner(System.in);
 
 		while (!apagar) {
@@ -317,12 +394,6 @@ private static void ordenaVentas() {
 			case '3':
 				menuAdministrador();
 				break;
-			case '4':
-				infoProductos();
-				for (int index = 0; index < productos.length; index++) {
-					System.out.printf("| Index: %2d | %-20s | Precio: %2.2f | Ventas: %3d |\n",
-							index, productos[index], precios[index],ventas[index]);
-				}
 			default:
 				System.out.println("\nHa indicado una opcion incorrecta");
 				break;
