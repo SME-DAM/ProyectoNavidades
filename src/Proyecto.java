@@ -14,21 +14,21 @@ public class Proyecto {
 
 	// inicializa la maquina
 	static void inicializarProductos() {
-		//datos del enunciado
+		// datos del enunciado
 		String[][] prods = { { "Lacasitos", "Chicles de fresa", "KitKat", "Palotes" },
 				{ "Oreo", "Bolsa Haribo", "Chetoos", "Twix" },
 				{ " M&M'S ", " Kinder Bueno ", "Papa Delta", "Chicles de menta" },
 				{ "Lacasitos", "Crunch", "Milkybar", "KitKat" } };
 		double[][] precs = { { 1.5, 0.8, 1.1, 0.9 }, { 1.8, 1, 1.2, 1 }, { 1.8, 1.3, 1.2, 0.8 },
 				{ 1.5, 1.1, 1.1, 1.1 } };
-		//reseteo las variables
+		// reseteo las variables
 		for (int i = 0; i < 16; i++) {
 			productos[i] = "";
 			ventas[i][0] = i;
 			ventas[i][1] = 0;
 			precios[i] = 0;
 		}
-		//copio los datos del enunciado en las estructuras de control
+		// copio los datos del enunciado en las estructuras de control
 		for (int fila = 0; fila < 4; fila++) {
 			for (int columna = 0; columna < 4; columna++) {
 				boolean colocado = false;
@@ -50,8 +50,9 @@ public class Proyecto {
 		}
 		ordenaAlfabetico();
 	}
-	//ordena alfabeticamente los productos segun el nombre
-	//usa el algoritmo de la burbuja, dejando los vacios al final
+
+	// ordena alfabeticamente los productos segun el nombre
+	// usa el algoritmo de la burbuja, dejando los vacios al final
 	static public void ordenaAlfabetico() {
 		boolean desordenado = true;
 		while (desordenado) {
@@ -75,18 +76,19 @@ public class Proyecto {
 					}
 					desordenado = true;
 				}
-
 			}
 		}
 	}
+
 	// vende el producto y devuelve el valor de la venta
 	// si no hay existencias no hace nada y devuelve 0
 	static double venderProducto(int fila, int columna) {
 		int[] celda = tienda[fila][columna];
 		if (celda[1] > 0) {
 			celda[1]--;
-			for (int index = 0; index < ventas.length;index++)
-				if (ventas[index][0]==celda[0]) ventas[index][1]++;
+			for (int index = 0; index < ventas.length; index++)
+				if (ventas[index][0] == celda[0])
+					ventas[index][1]++;
 			return precios[celda[0]];
 		}
 		return 0;
@@ -99,62 +101,69 @@ public class Proyecto {
 		for (int fila = 0; fila < filas; fila++) {
 			for (int columna = 0; columna < columnas; columna++) {
 				int[] celda = tienda[fila][columna];
-				System.out.printf("| %-20s | Posicion: %c%c | Precio: %2.2f |\n", productos[celda[0]],
-						'A' + fila, 'A' + columna, precios[celda[0]]);
+				System.out.printf("| %-20s | Posicion: %c%c | Precio: %2.2f |\n", productos[celda[0]], 'A' + fila,
+						'A' + columna, precios[celda[0]]);
 			}
 		}
 	}
 
-	//muestra los precios de los productos registrados,
-	//sus existencias y sus ventas
+	// muestra los precios de los productos registrados,
+	// sus existencias y sus ventas
 	private static void infoProductos() {
-		for (int prod =0;prod<16;prod++) {
-			if(productos[prod].isEmpty()) return;
+		for (int prod = 0; prod < 16; prod++) {
+			if (productos[prod].isEmpty())
+				return;
 			int unidades = 0;
 			for (int fila = 0; fila < tienda[0].length; fila++) {
 				for (int columna = 0; columna < tienda.length; columna++) {
-					unidades += tienda[fila][columna][0]==prod?tienda[fila][columna][1]:0;
+					unidades += tienda[fila][columna][0] == prod ? tienda[fila][columna][1] : 0;
 				}
 			}
 			int vendido = 0;
-			for (int index = 0; index < ventas.length;index++)
-				if (ventas[index][0]==prod) vendido = ventas[index][1];
-			System.out.printf("| %-20s | Precio: %2.2f | U. disponibles: %3d | Ventas: %3d |\n",
-					productos[prod], precios[prod], unidades,vendido);
+			for (int index = 0; index < ventas.length; index++)
+				if (ventas[index][0] == prod)
+					vendido = ventas[index][1];
+			System.out.printf("| %-20s | Precio: %2.2f | U. disponibles: %3d | Ventas: %3d |\n", productos[prod],
+					precios[prod], unidades, vendido);
 		}
 	}
+
+	// cambia la password de administrador
 	private static void actualizarPassword() {
 		System.out.println("\nIntroduzca nueva contraseña");
 		String tempPass = sc.next();
 		System.out.println("\nRepita nueva contraseña");
 		String confPass = sc.next();
-		if(tempPass.equals(confPass)&&!tempPass.isEmpty()) {
-			password=tempPass;
+		if (tempPass.equals(confPass) && !tempPass.isEmpty()) {
+			password = tempPass;
 			System.out.println("\nContraseña actualizada");
 			return;
 		}
 		System.out.println("\nLas contraseñas no coinciden");
-		
+
 	}
-	//comprueba que haya sitio y repone los productos especificados
+
+	// pide una posicion al usuario y si es válida la devuelve en un vector
+	// en caso contrario devuelve un vector con valores negativos
 	private static int[] recogePosicion() {
 		System.out.println("Introduce la posicion:");
-		int[] out= {-1,-1};
+		int[] out = { -1, -1 };
 		String entrada = sc.next();
 		if (entrada.length() >= 2) {
 			int fila = entrada.charAt(0) - 'A';
 			int columna = entrada.charAt(1) - 'A';
 			if (!(fila < 0 || fila > 3 || columna < 0 || columna > 3)) {
-				out[0]=fila;
-				out[1]=columna;
+				out[0] = fila;
+				out[1] = columna;
 				return out;
 			}
 		}
 		System.out.println("\nHa indicado una posicion incorrecta");
 		return out;
 	}
-	//recibe la posicion a rellenar y pide la cantidad a reponer,
-	//si es posible añadirlo devuelve true, en caso contrario false.
+
+	// recibe la posicion a rellenar y pide la cantidad a reponer,
+	// si es posible añadirlo devuelve true, en caso contrario false.
 	private static boolean reponerProductos(int[] posicion) {
 		boolean actualizado = false;
 		System.out.println("Introduce la cantidad a reponer:");
@@ -162,128 +171,143 @@ public class Proyecto {
 		try {
 			cantidad = sc.nextInt();
 		} catch (InputMismatchException e) {
-			
+
 		}
-		if (cantidad <= 0) return actualizado;
+		if (cantidad <= 0)
+			return actualizado;
 		int existencias = tienda[posicion[0]][posicion[1]][1];
 		if ((5 - existencias) >= cantidad) {
-			tienda[posicion[0]][posicion[1]][1]+=cantidad;
+			tienda[posicion[0]][posicion[1]][1] += cantidad;
 			actualizado = true;
-		}	
+		}
 		return actualizado;
 	}
-	
-private static boolean actualizarPrecio(int[] posicion) {
-	System.out.println("Introduce el precio de venta:");
-	double precio = 0;
-	try {
-		precio = sc.nextDouble();
-	} catch (InputMismatchException e) {
-		sc.nextLine();
-	}
-	if (precio <= 0) return false;
-	precios[tienda[posicion[0]][posicion[1]][0]]=precio;
-	return true;
-}
 
-private static boolean actualizarProducto(int[] posicion) {
-	System.out.println("Introduce el nombre del producto:");
-	String producto = sc.next().strip();
-	if (producto.isEmpty()) return false;
-	int index=0;
-	boolean existe = false;
-	
-	while (!existe && index < productos.length) {
-		if (productos[index].equals(producto)) {
-			existe = true;
+//pide el precio para el producto de la posicion pasada como parametro. Si el valor es menor o 
+//igual que cero devuelve false, en caso contrario devuelve true y lo actualiza .
+	private static boolean actualizarPrecio(int[] posicion) {
+		System.out.println("Introduce el precio de venta:");
+		double precio = 0;
+		try {
+			precio = sc.nextDouble();
+		} catch (InputMismatchException e) {
+			sc.nextLine();
+		}
+		if (precio <= 0)
+			return false;
+		precios[tienda[posicion[0]][posicion[1]][0]] = precio;
+		return true;
+	}
+
+//añade un producto en la máquina en la posicion que se pasa como parametro,
+//pide la cantidad del nuevo producto y su precio, si existe en otra posicion
+//actualiza el precio al nuevo valor.
+	private static boolean actualizarProducto(int[] posicion) {
+		System.out.println("Introduce el nombre del producto:");
+		String producto = sc.next().strip();
+		if (producto.isEmpty())
+			return false;
+		int index = 0;
+		boolean existe = false;
+
+		while (!existe && index < productos.length) {
+			if (productos[index].equals(producto)) {
+				existe = true;
+			} else {
+				index++;
+			}
+		}
+		if (existe) {
+			tienda[posicion[0]][posicion[1]][0] = index;
 		} else {
+			index = tienda[posicion[0]][posicion[1]][0];
+			int ocurrencias = 0;
+			for (int fila = 0; fila < 4; fila++) {
+				for (int columna = 0; columna < 4; columna++) {
+					ocurrencias += tienda[fila][columna][0] == index ? 1 : 0;
+				}
+			}
+			if (ocurrencias <= 1) {
+				productos[index] = producto;
+				for (int ind = 0; ind < ventas.length; ind++)
+					if (ventas[ind][0] == index)
+						ventas[ind][1] = 0;
+			} else {
+				for (int ind = 0; ind < productos.length; ind++)
+					if (productos[ind].isEmpty()) {
+						productos[ind] = producto;
+						for (int venta = 0; venta < ventas.length; venta++)
+							if (ventas[venta][0] == index)
+								ventas[venta][1] = 0;
+						tienda[posicion[0]][posicion[1]][0] = ind;
+						tienda[posicion[0]][posicion[1]][1] = 0;
+						ind = productos.length;
+					}
+			}
+		}
+		while (!reponerProductos(posicion))
+			;
+		while (!actualizarPrecio(posicion))
+			System.out.println("Introduce un valor positivo!");
+		return true;
+	}
+
+//muestra los tres productos más vendidos
+	private static void muestraTopVentas() {
+		int index = ventas.length;
+		int cuenta = 0;
+		while (index > 0) {
+			index--;
+			int prod = ventas[index][0];
+			if (cuenta < 3 || ventas[index + 1][1] == ventas[index][1]) {
+				if (!productos[prod].isEmpty() && ventas[index][1] > 0) {
+					cuenta++;
+					System.out.printf("| %-20s | Precio: %2.2f |  Ventas: %3d |\n", productos[prod], precios[prod],
+							ventas[index][1]);
+				}
+			} else {
+				return;
+			}
+		}
+		if (cuenta == 0)
+			System.out.println("\nNo se ha vendido nada aún!\n");
+	}
+
+//muestra el producto menos vedido
+	private static void muestraMenosVentas() {
+		int index = 0;
+		while (index < ventas.length) {
+			int prod = ventas[index][0];
+			if (ventas[index][1] == ventas[0][1]) {
+				if (!productos[prod].isEmpty()) {
+					System.out.printf("| %-20s | Precio: %2.2f |  Ventas: %3d |\n", productos[prod], precios[prod],
+							ventas[index][1]);
+				}
+			} else {
+				return;
+			}
 			index++;
 		}
 	}
-	if (existe) {
-		tienda[posicion[0]][posicion[1]][0]=index;
-	} else {
-		index = tienda[posicion[0]][posicion[1]][0];
-		int ocurrencias=0;
-		for (int fila = 0; fila < 4; fila++) {
-			for (int columna = 0; columna < 4; columna++) {
-				ocurrencias += tienda[fila][columna][0] == index ? 1 : 0;
-			}
-		}
-		if(ocurrencias <= 1) {
-			productos[index]=producto;
-			for (int ind = 0; ind < ventas.length;ind++)
-				if (ventas[ind][0]==index) ventas[ind][1] = 0;
-		} else {
-			for (int ind = 0; ind < productos.length;ind++)
-				if(productos[ind].isEmpty()) {
-					productos[ind]=producto;
-					for (int venta = 0; venta < ventas.length;venta++)
-						if (ventas[venta][0]==index) ventas[venta][1] = 0;
-					tienda[posicion[0]][posicion[1]][0]=ind;
-					tienda[posicion[0]][posicion[1]][1]=0;
-					ind = productos.length;
+
+//ordena la matriz de vendidos de menor a mayor
+	private static void ordenaVentas() {
+		boolean working = true;
+		while (working) {
+			working = false;
+			for (int index = 0; index < productos.length - 1; index++) {
+				if (ventas[index][1] > ventas[index + 1][1] && !productos[ventas[index + 1][0]].isEmpty()) {
+					int[] temp = ventas[index];
+					ventas[index] = ventas[index + 1];
+					ventas[index + 1] = temp;
+					working = true;
 				}
-		}
-	}
-	while(!reponerProductos(posicion));
-	while(!actualizarPrecio(posicion))
-		System.out.println("Introduce un valor positivo!");
-	return true;
-}
-
-private static void muestraTopVentas() {
-	int index = ventas.length;
-	int cuenta = 0;
-	while(index > 0) {
-		index --;
-		int prod = ventas[index][0];
-		if (cuenta < 3 || ventas[index+1][1] == ventas[index][1]) {
-			if (!productos[prod].isEmpty() && ventas[index][1] > 0) {
-				cuenta++;
-				System.out.printf("| %-20s | Precio: %2.2f |  Ventas: %3d |\n",
-						productos[prod], precios[prod], ventas[index][1]);
-			}
-		} else {
-			return;
-		}
-	}
-	if (cuenta == 0) System.out.println("\nNo se ha vendido nada aún!\n");
-}
-
-
-private static void muestraMenosVentas() {
-	int index = 0;
-	while(index < ventas.length) {
-		int prod = ventas[index][0];
-		if (ventas[index][1] == ventas[0][1]) {
-			if (!productos[prod].isEmpty()) {
-				System.out.printf("| %-20s | Precio: %2.2f |  Ventas: %3d |\n",
-						productos[prod], precios[prod], ventas[index][1]);
-			}
-		} else {
-			return;
-		}
-		index ++;
-	}
-}
-
-private static void ordenaVentas() {
-	boolean working = true;
-	while (working) {
-		working=false;
-		for (int index = 0; index < productos.length - 1; index++) {
-			if (ventas[index][1] > ventas[index+1][1] && !productos[ventas[index+1][0]].isEmpty()) {
-				int[] temp = ventas[index];
-				ventas[index] = ventas[index + 1];
-				ventas[index + 1] = temp;
-				working=true;
 			}
 		}
+
 	}
-	
-}
-	//gestiona el menu de administracion
+
+	// gestiona el menu de administracion
 	static void menuAdministrador() {
 		System.out.println("\nIntroduzca la contraseña de administración");
 		String pass = sc.next();
@@ -311,8 +335,8 @@ private static void ordenaVentas() {
 				break;
 			case 2:
 				posicion = recogePosicion();
-				if(posicion[0]>=0) {
-					if(reponerProductos(posicion)) {
+				if (posicion[0] >= 0) {
+					if (reponerProductos(posicion)) {
 						System.out.println("\nEl producto se ha repuesto correctamente");
 					} else {
 						System.out.println("\nError, revise los datos");
@@ -321,8 +345,8 @@ private static void ordenaVentas() {
 				break;
 			case 3:
 				posicion = recogePosicion();
-				if(posicion[0]>=0) {
-					if(actualizarPrecio(posicion)) {
+				if (posicion[0] >= 0) {
+					if (actualizarPrecio(posicion)) {
 						System.out.println("\nEl precio se a actualizado correctamente");
 					} else {
 						System.out.println("\nError, revise los datos");
@@ -331,10 +355,10 @@ private static void ordenaVentas() {
 				break;
 			case 4:
 				posicion = recogePosicion();
-				if(posicion[0]>=0)
-					if(actualizarProducto(posicion)) {
+				if (posicion[0] >= 0)
+					if (actualizarProducto(posicion)) {
 						System.out.println("\nEl producto se a actualizado correctamente");
-					} else { 
+					} else {
 						System.out.println("\nError, revise los datos");
 					}
 				break;
@@ -350,7 +374,7 @@ private static void ordenaVentas() {
 				infoProductos();
 				break;
 			case 8:
-				System.out.printf("\nVentas totales hasta este momento: %2.2f€\n\n",cajaTotal);
+				System.out.printf("\nVentas totales hasta este momento: %2.2f€\n\n", cajaTotal);
 				break;
 			case 9:
 				salir = true;
@@ -365,20 +389,19 @@ private static void ordenaVentas() {
 			}
 		}
 	}
-	
-	public static void main(String[] args) {
 
+	public static void main(String[] args) {
 		inicializarProductos();
 		sc = new Scanner(System.in);
-
 		while (!apagar) {
-			System.out.print("\n*** Opciones ***\n\n1. Pedir golosina\n2. Mostrar golosinas\n3. Submenu administrador\n");
+			System.out
+					.print("\n*** Opciones ***\n\n1. Pedir golosina\n2. Mostrar golosinas\n3. Submenu administrador\n");
 			String input = sc.next();
-			char opcion = input.length()==1?input.charAt(0):'E';
+			char opcion = input.length() == 1 ? input.charAt(0) : 'E';
 			switch (opcion) {
 			case '1':
 				int[] posicion = recogePosicion();
-				if (posicion[0]>=0) {
+				if (posicion[0] >= 0) {
 					double venta = venderProducto(posicion[0], posicion[1]);
 					cajaTotal += venta;
 					if (venta > 0) {
