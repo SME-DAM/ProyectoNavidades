@@ -1,16 +1,14 @@
 import java.util.InputMismatchException;
 import java.util.Scanner;
 
-import javax.print.attribute.AttributeSetUtilities;
-
-// 11 horas de trabajo
+// 17 horas de trabajo
 
 public class Proyecto {
 	//variables globales
 	private static Scanner sc;
 
 	// inicializa la maquina
-	static void inicializarProductos(String[]productos, int[] ventas, double[] precios, int[][][]tienda) {
+	static void inicializarProductos(String[]productos, int[] ventas, double[] precios, int[][]tienda, int[][] existencias) {
 		// datos del enunciado
 		String[][] prods = { { "Lacasitos", "Chicles de fresa", "KitKat", "Palotes" },
 				{ "Oreo", "Bolsa Haribo", "Chetoos", "Twix" },
@@ -36,8 +34,8 @@ public class Proyecto {
 						precios[posicion] = precs[fila][columna];
 					}
 					if (productos[posicion].equalsIgnoreCase(producto)) {
-						tienda[fila][columna][0] = posicion;
-						tienda[fila][columna][1] = 3;
+						tienda[fila][columna] = posicion;
+						existencias[fila][columna] = 3;
 						colocado = true;
 					}
 					posicion++;
@@ -47,12 +45,15 @@ public class Proyecto {
 	}
 	// ordena alfabeticamente los productos segun el nombre
 	// usa el algoritmo de la burbuja, dejando los vacios al final
-	static public void ordenaAlfabetico(int[]ventas,String[]productos,double[]precios,int[][][] tienda) {
+	static public void ordenaAlfabetico(int[]ventas,String[]productos,double[]precios,int[][] tienda) {
 		boolean desordenado = true;
 		while (desordenado) {
 			desordenado = false;
 			for (int index = 0; index < productos.length - 1; index++) {
 				if (productos[index].compareToIgnoreCase(productos[index + 1]) > 0 && !productos[index + 1].isEmpty()) {
+					int vent = ventas[index];
+					ventas[index] =  ventas[index+1];
+					ventas[index+1] = vent;
 					String proc = productos[index];
 					productos[index] = productos[index + 1];
 					productos[index + 1] = proc;
@@ -61,10 +62,10 @@ public class Proyecto {
 					precios[index + 1] = prec;
 					for (int fila = 0; fila < 4; fila++) {
 						for (int columna = 0; columna < 4; columna++) {
-							if (tienda[fila][columna][0] == index) {
-								tienda[fila][columna][0]++;
-							} else if (tienda[fila][columna][0] == index + 1) {
-								tienda[fila][columna][0]--;
+							if (tienda[fila][columna] == index) {
+								tienda[fila][columna]++;
+							} else if (tienda[fila][columna] == index + 1) {
+								tienda[fila][columna]--;
 							}
 						}
 					}
@@ -75,42 +76,44 @@ public class Proyecto {
 	}
 	// vende el producto y devuelve el valor de la venta
 	// si no hay existencias no hace nada y devuelve 0
-	static double venderProducto(int[] posicion, int[] ventas, int[][][] tienda, double[] precios) {
-		int[] celda = tienda[posicion[0]][posicion[1]];
-		if (celda[1] > 0) {
-			celda[1]--;
-			ventas[celda[0]]++;
-			return precios[celda[0]];
+	static double venderProducto(int[] posicion, int[] ventas, int[][] tienda, int[][]existencias, double[] precios) {
+		int producto = eligeProducto(posicion, tienda);
+		int stock = compruebaExistencias(posicion, existencias);
+		if (stock > 0) {
+			establecerExistencias(posicion, existencias, stock-1);
+			ventas[producto]++;
+			return precios[producto];
 		}
 		return -1;
 	}
 	// muestra los productos de cada casilla con su precio
-	static void mostarProductos(int[][][] tienda, String[] productos, double[] precios) {
+	static void mostarProductos(int[][] tienda, String[] productos, double[] precios) {
 		int filas = tienda[0].length;
 		int columnas = tienda.length;
 		for (int fila = 0; fila < filas; fila++) {
 			for (int columna = 0; columna < columnas; columna++) {
-				int[] celda = tienda[fila][columna];
-				imprimir(String.format("| %-20s | Posicion: %c%c | Precio: %2.2f |\n", productos[celda[0]], 'A' + fila,
-						'A' + columna, precios[celda[0]]));
+				int producto = tienda[fila][columna];
+				imprimir(String.format("| %-20s | Posicion: %c%c | Precio: %2.2f |\n", productos[producto], 'A' + fila,
+						'A' + columna, precios[producto]));
 			}
 		}
 	}
 	// muestra los precios de los productos registrados,
 	// sus existencias y sus ventas
-	private static void infoProductos(int[][][] tienda, String[] productos, double[] precios, int[] ventas) {
+	private static void infoProductos(int[][] tienda, int[][] existencias, String[] productos, double[] precios, int[] ventas) {
 		for (int prod = 0; prod < 16; prod++) {
 			if (productos[prod].isEmpty())
 				return;
 			int unidades = 0;
 			for (int fila = 0; fila < tienda[0].length; fila++) {
 				for (int columna = 0; columna < tienda.length; columna++) {
-					unidades += tienda[fila][columna][0] == prod ? tienda[fila][columna][1] : 0;
+					if(tienda[fila][columna] == prod) {
+						unidades += existencias[fila][columna];
+					}
 				}
 			}
-			int vendido = ventas[prod];
-			imprimir(String.format("| %-20s | Precio: %2.2f | U. disponibles: %3d | Ventas: %3d |\n", productos[prod],
-					precios[prod], unidades, vendido));
+			imprimir(String.format("| %-20s | Precio: %2.2f | U. disponibles: %3d | Ventas: %3d |\n",
+					productos[prod], precios[prod], unidades, ventas[prod]));
 		}
 	}
 	// cambia la password de administrador
@@ -146,24 +149,28 @@ public class Proyecto {
 	}
 	// recibe la posicion a rellenar y pide la cantidad a reponer,
 	// si es posible añadirlo devuelve true, en caso contrario false.
-	private static boolean reponerProducto(int[] posicion, int[][][] tienda) {
-		boolean actualizado = false;
-		imprimir("Introduce la cantidad a reponer:");
-		int cantidad = 0;
-		try {
-			cantidad = leerEntero();
-		} catch (InputMismatchException e) {
-			leerCadena();
+	private static void reponerProducto(int[] posicion, int[][] existencias) {
+		imprimir("\nIntroduzca la cantidad a reponer:");
+		int cantidad = leerCantidad();
+		while (cantidad <= 0) {
+			imprimir("\nIntroduzca un entero positivo\n");
 		}
-		if (cantidad <= 0)
-			return actualizado;
-		int existencias = tienda[posicion[0]][posicion[1]][1];
-		if ((5 - existencias) >= cantidad) {
-			tienda[posicion[0]][posicion[1]][1] += cantidad;
-			actualizado = true;
-		}
-		return actualizado;
+		int stock = compruebaExistencias(posicion,existencias);
+		if (cantidad + stock <= 5) {
+			establecerExistencias(posicion, existencias, stock + cantidad);
+			imprimir("\nEl producto se ha repuesto correctamente\n\n");
+			} else {
+				imprimir("\nSe ha producido un error\n\n");
+			}
 	}
+
+	private static int compruebaExistencias(int[] posicion, int[][] existencias) {
+		return existencias[posicion[0]][posicion[1]];
+	}
+	private static void establecerExistencias(int[] posicion, int[][] existencias, int stock) {
+		existencias[posicion[0]][posicion[1]]=stock;		
+	}
+	
 //pide el precio para el producto de la posicion pasada como parametro. Si el valor es menor o 
 //igual que cero devuelve false, en caso contrario devuelve true y lo actualiza .
 	private static double leerPrecio() {
@@ -182,62 +189,92 @@ public class Proyecto {
 			imprimir("Introduzca el nuevo precio de venta");
 			nuevoPrecio = leerPrecio();
 		}
+		precios[index]=nuevoPrecio;
 		
+	}
+	
+	private static int buscaProducto(String[]productos, String nombre) {
+		int index=-1;
+		for (int i = 0; i < productos.length; i++) {
+			if (productos[i].equals(nombre)) {
+				index=i;
+			}
+		}
+		return index;
+	}
+	
+	private static int cuentaOcurrenciasProducto(int[][] tienda, int[] posicion) {
+		int producto = eligeProducto(posicion, tienda);
+		int ocurrencias=0;
+		for (int fila = 0; fila < tienda[0].length; fila++) {
+			for (int columna = 0; columna < tienda.length; columna++) {
+				if(tienda[fila][columna] == producto) { 
+					ocurrencias++;
+				}
+			}
+		}
+		return ocurrencias;
 	}
 //añade un producto en la máquina en la posicion que se pasa como parametro,
 //pide la cantidad del nuevo producto y su precio, si existe en otra posicion
 //actualiza el precio al nuevo valor.
-	private static boolean actualizarProducto(int[] posicion,String[] productos, int[][][] tienda, int[] ventas) {
+	private static boolean cambiarProducto(int[] posicion,String[] productos, int[][] tienda, int[] ventas) {
+		int index = -1;
 		imprimir("Introduce el nombre del producto:");
 		String producto = leerCadena();
-		if (producto.isEmpty())
+		if (producto.length()==0)
 			return false;
-		int index = 0;
-		boolean existe = false;
-		while (!existe && index < productos.length) {
-			if (productos[index].equals(producto)) {
-				existe = true;
-			} else {
-				index++;
-			}
+		int productoAntiguo = cuentaOcurrenciasProducto(tienda, posicion);
+		if (productoAntiguo < 2) {
+			index = eligeProducto(posicion, tienda);
+			reseteaVentas(ventas, index);
+			reemplazaProducto("", productos, index);
 		}
-		if (existe) {
-			tienda[posicion[0]][posicion[1]][0] = index;
-		} else {
-			index = tienda[posicion[0]][posicion[1]][0];
-			int ocurrencias = 0;
-			for (int fila = 0; fila < 4; fila++) {
-				for (int columna = 0; columna < 4; columna++) {
-					ocurrencias += tienda[fila][columna][0] == index ? 1 : 0;
-				}
-			}
-			if (ocurrencias <= 1) {
-				productos[index] = producto;
-				for (int ind = 0; ind < ventas.length; ind++)
-					if (ventas[ind]== index)
-						ventas[ind] = 0;
-			} else {
-				for (int ind = 0; ind < productos.length; ind++)
-					if (productos[ind].isEmpty()) {
-						productos[ind] = producto;
-						for (int venta = 0; venta < ventas.length; venta++)
-							if (ventas[venta] == index)
-								ventas[venta] = 0;
-						tienda[posicion[0]][posicion[1]][0] = ind;
-						tienda[posicion[0]][posicion[1]][1] = 0;
-						ind = productos.length;
-					}
-			}
+		index = buscaProducto(productos, producto);
+		if (index < 0) {
+			index = añadeProductoLista(producto, productos);
 		}
-		while (!reponerProducto(posicion,tienda));
+		añadeTienda(index, tienda, posicion);
 		return true;
 	}
 
-//muestra los tres productos más vendidos
+	private static void añadeTienda(int index, int[][] tienda,int[] posicion) {
+		tienda[posicion[0]][posicion[1]] = index;		
+	}
+
+	private static int eligeProducto(int[] posicion, int[][] tienda) {
+				return tienda[posicion[0]][posicion[1]];
+	}
+
+	private static int leerCantidad() {
+		try {
+			return leerEntero();
+		} catch (InputMismatchException e) {
+			leerCadena();
+		}
+		return -1;
+	}
+	
+	private static int añadeProductoLista(String producto, String[] productos) {
+		for (int i = 0; i < productos.length; i++) {
+			if (productos[i].isEmpty()) {
+				productos[i]=producto;
+				return i;
+				}
+			}
+		return -1;
+	}
+	private static void reseteaVentas(int[] ventas, int index) {
+		ventas[index]=0;
+	}
+	private static void reemplazaProducto(String producto, String[] productos, int index) {
+		productos[index]=producto;
+	}
+	//muestra los tres productos más vendidos
 	private static void muestraTopVentas(int[]ventas,String[]productos,double[]precios) {
-		String[] productosOrd = productos.clone();
-		int[] ventasOrd = ventas.clone();
-		double[] preciosOrd = precios.clone();
+		String[] productosOrd = duplicaArrayString(productos);
+		int[] ventasOrd = duplicaArrayInteger(ventas);
+		double[] preciosOrd = duplicaArrayDouble(precios);
 		ordenaVentas(productosOrd, ventasOrd, preciosOrd);
 		int index = ventas.length;
 		int cuenta = 0;
@@ -246,7 +283,8 @@ public class Proyecto {
 			if (cuenta < 3 || ventasOrd[index + 1] == ventasOrd[index]) {
 				if (!productosOrd[index].isEmpty() && ventasOrd[index] > 0) {
 					cuenta++;
-					imprimir(String.format("| %-20s | Precio: %2.2f |  Ventas: %3d |\n", productosOrd[index], preciosOrd[index], ventasOrd[index]));
+					imprimir(String.format("| %-20s | Precio: %2.2f |  Ventas: %3d |\n",
+							productosOrd[index], preciosOrd[index], ventasOrd[index]));
 				}
 			} else {
 				return;
@@ -256,7 +294,31 @@ public class Proyecto {
 			imprimir("\nNo se ha vendido nada aún!\n");
 	}
 
-//muestra el producto menos vedido
+private static double[] duplicaArrayDouble(double[] precios) {
+		double[] temp = new double[precios.length];
+		for (int i = 0; i < precios.length; i++) {
+			temp[i] = precios[i];
+			
+		}
+		return temp;
+	}
+private static int[] duplicaArrayInteger(int[] ventas) {
+	int[] temp = new int[ventas.length];
+	for (int i = 0; i < ventas.length; i++) {
+		temp[i] = ventas[i];
+		
+	}
+	return temp;
+	}
+private static String[] duplicaArrayString(String[] productos) {
+	String[] temp = new String[productos.length];
+	for (int i = 0; i < productos.length; i++) {
+		temp[i] = productos[i];
+		
+	}
+	return temp;
+	}
+	//muestra el producto menos vedido
 	private static void muestraMenosVentas(int[]ventas,String[]productos,double[]precios) {
 		String[] productosOrd = productos;
 		int[] ventasOrd = ventas;
@@ -295,7 +357,7 @@ public class Proyecto {
 	}
 
 	// gestiona el menu de administracion
-	static boolean menuAdministrador(String password, double cajaTotal,int[][][] tienda, int[]ventas, double[]precios, String[] productos) {
+	static boolean menuAdministrador(String password, double cajaTotal,int[][] tienda, int[]ventas, double[]precios, int[][] existencias, String[] productos) {
 		imprimir("\nIntroduzca la contraseña de administracion\n");
 		String pass = leerCadena();
 		if (!password.equals(pass)) {
@@ -313,7 +375,7 @@ public class Proyecto {
 			try {
 				opcion = sc.nextInt();
 			} catch (InputMismatchException e) {
-
+				leerCadena();
 			}
 			switch (opcion) {
 			case 1:
@@ -321,29 +383,29 @@ public class Proyecto {
 				break;
 			case 2:
 				posicion = recogePosicion();
-				if (posicion[0] >= 0) {
-					if (reponerProducto(posicion, tienda)) {
-						imprimir("\nEl producto se ha repuesto correctamente\n");
-					} else {
-						imprimir("\nError, revise los datos\n");
-					}
-				}
+				if (posicion[0] >= 0)
+					reponerProducto(posicion, existencias);
 				break;
 			case 3:
 				posicion = recogePosicion();
 				if (posicion[0] >= 0) {
-					int index = tienda[posicion[0]][posicion[1]][0];
+					int index = eligeProducto(posicion, tienda);
 					actualizarPrecio(index, precios);
 				}
 				break;
 			case 4:
 				posicion = recogePosicion();
-				if (posicion[0] >= 0)
-					if (actualizarProducto(posicion, productos, tienda, ventas)) {
-						imprimir("\nEl producto se a actualizado correctamente\n");
+				if (posicion[0] >= 0) {
+					if(cambiarProducto(posicion, productos, tienda, ventas)){
+						int index = eligeProducto(posicion, tienda);
+						actualizarPrecio(index, precios);
+						establecerExistencias(posicion,existencias, 0);
+						reponerProducto(posicion, existencias);
+						imprimir("\nEl producto se ha actualizado correctamente\n");
 					} else {
 						imprimir("\nError, revise los datos\n");
 					}
+			}
 				break;
 			case 5:
 				muestraTopVentas(ventas,productos,precios);
@@ -352,7 +414,8 @@ public class Proyecto {
 				muestraMenosVentas(ventas,productos,precios);
 				break;
 			case 7:
-				infoProductos(tienda, productos, precios, ventas);
+				ordenaAlfabetico(ventas, productos, precios, tienda);
+				infoProductos(tienda, existencias, productos, precios, ventas);
 				break;
 			case 8:
 				imprimir(String.format("\nVentas totales hasta este momento: %2.2f€\n\n", cajaTotal));
@@ -367,6 +430,7 @@ public class Proyecto {
 			}
 		}
 	}
+	
 	// salida
 	static void imprimir(String salida){
 		System.out.print(salida);
@@ -388,15 +452,16 @@ public class Proyecto {
 
 		String[] productos = new String[16];
 		double[] precios = new double[16];
-		int[][][] tienda = new int[4][4][2];
+		int[][] tienda = new int[4][4];
+		int[][] existencias = new int[4][4];
 		int[] ventas = new int[16];
 		double cajaTotal = 0;
 		String password = "DAM";
 		boolean apagar = false;
 		
-		inicializarProductos(productos,ventas,precios,tienda);
-		ordenaAlfabetico(ventas, productos, precios, tienda);
+		inicializarProductos(productos,ventas,precios,tienda,existencias);
 		sc = new Scanner(System.in);
+		sc.useDelimiter("\n");
 		while (!apagar) {
 			imprimir("\n*** Opciones ***\n\n1. Pedir golosina\n2. Mostrar golosinas\n3. Submenu administrador\n");
 			int opcion=0;
@@ -409,9 +474,9 @@ public class Proyecto {
 			case 1:
 				int[] posicion = recogePosicion();
 				if (posicion[0] >= 0) {
-					double venta = venderProducto(posicion, ventas, tienda, precios);
-					cajaTotal += venta;
+					double venta = venderProducto(posicion, ventas, tienda, existencias, precios);
 					if (venta > 0) {
+						cajaTotal += venta;
 						imprimir("\nPuede retirar su producto\n");
 					} else {
 						imprimir("\nNo hay existencias de ese producto\n");
@@ -422,7 +487,7 @@ public class Proyecto {
 				mostarProductos(tienda, productos, precios);
 				break;
 			case 3:
-				menuAdministrador(password, cajaTotal, tienda, ventas, precios,productos);
+				apagar = menuAdministrador(password, cajaTotal, tienda, ventas, precios, existencias, productos);
 				break;
 			default:
 				imprimir("\nHa indicado una opcion incorrecta\n");
