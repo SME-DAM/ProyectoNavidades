@@ -3,7 +3,7 @@ import java.util.Scanner;
 
 // 20 horas de trabajo
 
-public class Proyecto {
+public class Samuel_Martin_Candy {
 
 	// inicializa la maquina
 	static void inicializarProductos(String[] productos, int[] ventas, double[] precios, int[][] tienda,
@@ -96,7 +96,7 @@ public class Proyecto {
 		for (int fila = 0; fila < filas; fila++) {
 			for (int columna = 0; columna < columnas; columna++) {
 				int producto = tienda[fila][columna];
-				out += String.format("| %-20s | Posicion: %c%c | Precio: %2.2f |\n", productos[producto],
+				out += String.format("| %-20s | Posicion: %c%c | Precio: %.2f |\n", productos[producto],
 						'A' + fila, 'A' + columna, precios[producto]);
 			}
 		}
@@ -119,7 +119,7 @@ public class Proyecto {
 					}
 				}
 			}
-			out += String.format("| %-20s | Precio: %2.2f | U. disponibles: %3d | Ventas: %3d |\n",
+			out += String.format("| %-20s | Precio: %.2f | U. disponibles: %3d | Ventas: %3d |\n",
 					productos[prod], precios[prod], unidades, ventas[prod]);
 		}
 		return out;
@@ -144,6 +144,8 @@ public class Proyecto {
 	// recibe la posicion a rellenar y pide la cantidad a reponer,
 	// si es posible añadirlo devuelve true, en caso contrario false.
 	private static String reponerProducto(int[] posicion, int[][] existencias, int cantidad) {
+		if (cantidad < 0) return "\nNo puedes reponer una cantidad negativa\n";
+		if (cantidad == 0) return "\n¿Que sentido tiene reponer 0 unidades?\n";
 		int stock = compruebaExistencias(posicion, existencias);
 		if (cantidad + stock <= 5) {
 			establecerExistencias(posicion, existencias, stock + cantidad);
@@ -165,9 +167,11 @@ public class Proyecto {
 
 	// pide el precio en bucle hasta que es >0, despues lo establece en la posicion
 	// indicada
-	private static void actualizarPrecio(int index, double[] precios, Double precio) {
+	private static String actualizarPrecio(int index, double[] precios, Double precio) {
+		if (precio < 0) return "\nNo tiene sentido pagar por que se lleven algo\n";
+		if (precio == 0) return "\nNo soy una ONG, tengo que ganar dinero!\n";
 		precios[index] = precio;
-
+		return String.format("\nPrecio actualizado a %.2f€\n",precio);
 	}
 
 	// devuelve el indice que contiene ese nombre de producto, o 1 en caso de no
@@ -344,8 +348,7 @@ public class Proyecto {
 		inicializarProductos(productos, ventas, precios, tienda, existencias);
 		sc.useDelimiter("\n");
 		while (!apagar) {
-			System.out
-					.print("\n*** Opciones ***\n\n1. Pedir golosina\n2. Mostrar golosinas\n3. Submenu administrador\n");
+			System.out.print("\n*** Opciones ***\n\n1. Pedir golosina\n2. Mostrar golosinas\n3. Submenu administrador\n");
 			int opcion = 0;
 			try {
 				opcion = sc.nextInt();
@@ -353,7 +356,7 @@ public class Proyecto {
 				sc.next();
 			}
 			switch (opcion) {
-			case 1:
+			case 1: //pedir producto
 				System.out.print("Introduce la posicion:");
 				int[] posicion = recogePosicion(sc.next());
 				if (posicion[0] >= 0) {
@@ -366,10 +369,10 @@ public class Proyecto {
 					}
 				}
 				break;
-			case 2:
+			case 2: //mostrar producto
 				System.out.print(mostarProductos(tienda, productos, precios));
 				break;
-			case 3:
+			case 3: //menu administracion
 				System.out.print("\nIntroduzca la contraseña de administracion\n");
 				String pass = sc.next();
 				if (password.equals(pass)) {
@@ -387,7 +390,7 @@ public class Proyecto {
 							sc.next();
 						}
 						switch (opcion) {
-						case 1:
+						case 1: //cambiar contraseña
 							System.out.print("\nIntroduzca nueva contraseña\n");
 							String newPass = sc.next();
 							System.out.print("\nRepita nueva contraseña\n");
@@ -399,27 +402,23 @@ public class Proyecto {
 								System.out.print("\nLas contraseñas no coinciden\n");
 							}
 							break;
-						case 2:
+						case 2: //reponer producto
 							System.out.print("Introduce la posicion:");
 							posicion = recogePosicion(sc.next());
 							if (posicion[0] >= 0) {
 								System.out.print("\nIntroduzca la cantidad a reponer\n");
 								System.out.printf("Actualmente queda(n) %d\n",compruebaExistencias(posicion, existencias));
 								try {
-									int cantidad = sc.nextInt();
-									if (cantidad > 0) {
-										System.out.print(reponerProducto(posicion, existencias, cantidad));
-									} else {
-										System.out.print("\nNo puede reponer una cantidad negativa!\n");
-									}
+									System.out.print(reponerProducto(posicion, existencias, sc.nextInt()));
 								} catch (InputMismatchException e) {
-									System.out.print("\nNo es un número\n");
+									System.out.print("\nRevise los datos\n");
+									sc.next();
 								}
 							} else {
 								System.out.print("\nPosición invalida\n");
 							}
 							break;
-						case 3:
+						case 3: //cambiar precio
 							System.out.print("Introduce la posicion:");
 							posicion = recogePosicion(sc.next());
 							if (posicion[0] >= 0) {
@@ -427,58 +426,42 @@ public class Proyecto {
 								try {
 									System.out.print("\nIntroduzca el precio de venta.");
 									System.out.printf("Actualmente está a  %.02f€\n", precios[index]);
-									Double precio = sc.nextDouble();
-									if (precio > 0) {
-										actualizarPrecio(index, precios,precio);
-										System.out.print("Se ha actualizado el precio de venta\n");
-									} else {
-										System.out.print("\nEl precio de venta no puede ser menor o igual a cero\n");
-									}
+									System.out.print(actualizarPrecio(index, precios,sc.nextDouble()));
 								} catch (InputMismatchException e) {
-									System.out.print("\nNo es un numero válido\n");
+									System.out.print("\nRevise los datos\n");
+									sc.next();
 								}
 							} else {
 								System.out.print("\nPosición invalida\n");
 							}
 							break;
-						case 4:
+						case 4: //cambiar producto
 							System.out.print("Introduce la posicion:");
 							posicion = recogePosicion(sc.next());
 							if (posicion[0] >= 0) {
 								System.out.print("Introduce el nombre del nuevo producto:");
+								int rbIndex = eligeProducto(posicion, tienda);
+								String rbNombre = productos[rbIndex];
+								int rbExistencias = compruebaExistencias(posicion, existencias);
+								int rbVentas = ventas[rbIndex];
 								if (cambiarProducto(posicion, productos, tienda, ventas,sc.next())) {
 									int index = eligeProducto(posicion, tienda);
-									Double precio = -1.0;
-									while(precio < 0) {
-										try {
-											System.out.print("\nIntroduzca el precio de venta.");
-											precio = sc.nextDouble();
-											if (precio > 0) {
-												actualizarPrecio(index, precios,precio);
-												System.out.print("Se ha actualizado el precio de venta");
-											} else {
-												System.out.print("El precio de venta no puede ser menor o igual a cero");
-											}
-										} catch (InputMismatchException e) {
-											System.out.print("Revise los datos");
+									System.out.print("\nIntroduzca el precio de venta.");
+									try {
+										System.out.print(actualizarPrecio(index, precios,sc.nextDouble()));
+										establecerExistencias(posicion,existencias,0);
+										System.out.print("\nIntroduzca la cantidad a reponer\n");
+										System.out.print(reponerProducto(posicion, existencias, sc.nextInt()));
+										System.out.print("\nEl producto se ha actualizado correctamente\n");
+									} catch (InputMismatchException e) {
+										cambiarProducto(posicion, productos, tienda, ventas, rbNombre);
+										index = eligeProducto(posicion, tienda);
+										ventas[index]=rbVentas;
+										reponerProducto(posicion, existencias, rbExistencias);
+										System.out.print("Revise los datos");
+										sc.next();
 										}
-									}
-									establecerExistencias(posicion,existencias,0);
-									int cantidad = -1;
-									while (cantidad < 0) {
-										try {
-											System.out.print("\nIntroduzca la cantidad a reponer\n");
-											cantidad = sc.nextInt();
-											if (cantidad > 0) {
-												System.out.print(reponerProducto(posicion, existencias, cantidad));
-											} else {
-												System.out.print("No puedes reponer una cantidad negativa");
-											}
-										} catch (InputMismatchException e) {
-											System.out.print("\nNo es un numero válido\n");
-										}
-									}
-									System.out.print("\nEl producto se ha actualizado correctamente\n");
+									
 								} else {
 									System.out.print("\nError, revise los datos\n");
 								}
@@ -486,27 +469,27 @@ public class Proyecto {
 								System.out.print("\nPosición invalida\n");
 							}
 							break;
-						case 5:
+						case 5: //mostrar más vendidos
 							System.out.print(muestraTopVentas(ventas, productos, precios));
 							break;
-						case 6:
+						case 6: //mostrar menos vendidos
 							System.out.print(muestraMenosVentas(ventas, productos, precios));
 							break;
-						case 7:
+						case 7: //mostrar información de los productos
 							ordenaAlfabetico(ventas, productos, precios, tienda);
 							System.out.print(infoProductos(tienda, existencias, productos, precios, ventas));
 							break;
-						case 8:
+						case 8: //Recaudación total
 							System.out.print(String.format("\nVentas totales hasta este momento: %.02f€\n\n", cajaTotal));
 							break;
-						case 9:
+						case 9: //Salir menu de administración
 							admin = false;
 							break;
-						case 10:
+						case 10: //apagar la máquina
 							admin = false;
 							apagar = true;
 							break;
-						default:
+						default: //opcion erronea
 							System.out.print("\nHa indicado una opcion incorrecta\n");
 							break;
 						}
@@ -515,7 +498,7 @@ public class Proyecto {
 					System.out.print("\nLa contraseña es incorrecta\n");
 				}
 				break;
-			default:
+			default: //opcion erronea
 				System.out.print("\nHa indicado una opcion incorrecta\n");
 				break;
 			}
